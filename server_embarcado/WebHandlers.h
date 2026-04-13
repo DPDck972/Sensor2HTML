@@ -32,10 +32,29 @@ void handleRoot() {
  * Handle GET /data - returns current sensor data as JSON
  */
 void handleGetData() {
+  // Build response JSON with proper formatting
   String json = "{";
-  json += "\"value\":\"" + sensorValue + "\",";
+  
+  // Add counter
+  json += "\"counter\":" + String(postCounter) + ",";
+  
+  // Add timestamp in seconds
   json += "\"time\":" + String(lastDataTime / 1000) + ",";
-  json += "\"counter\":" + String(postCounter);
+  
+  // Add sensor data - escape it properly
+  json += "\"data\":";
+  if (sensorValue.length() > 0) {
+    // If sensorValue is JSON, return it as-is (already a valid JSON object)
+    // Otherwise wrap it as a string
+    if (sensorValue[0] == '{' || sensorValue[0] == '[') {
+      json += sensorValue;
+    } else {
+      json += "\"" + sensorValue + "\"";
+    }
+  } else {
+    json += "null";
+  }
+  
   json += "}";
   server.send(200, "application/json", json);
 }

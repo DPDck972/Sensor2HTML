@@ -151,9 +151,23 @@ const char* HTML_PAGE = R"rawliteral(
           }
           
           // Update last received data
-          if (data.value) {
-            container.innerHTML = 'Value: <strong>' + data.value + '</strong>';
-            timeContainer.innerHTML = new Date(data.time * 1000).toLocaleString();
+          if (data.data) {
+            // If data is an object (JSON), format it nicely
+            if (typeof data.data === 'object') {
+              let html = '<strong>Sensor Event Received:</strong><br>';
+              html += 'State: <strong>' + (data.data.state || 'N/A') + '</strong><br>';
+              html += 'Sensor: <strong>' + (data.data.sensor || 'N/A') + '</strong><br>';
+              html += 'Timestamp: <strong>' + (data.data.timestamp || 'N/A') + '</strong>';
+              container.innerHTML = html;
+            } else {
+              // If it's a string, just display it
+              container.innerHTML = '<strong>Data:</strong> ' + JSON.stringify(data.data);
+            }
+            
+            // Format time
+            if (data.time) {
+              timeContainer.innerHTML = new Date(data.time * 1000).toLocaleString();
+            }
           } else {
             container.innerHTML = 'No data received yet';
             timeContainer.innerHTML = 'Waiting...';
@@ -161,12 +175,12 @@ const char* HTML_PAGE = R"rawliteral(
         })
         .catch(error => {
           console.error('Error:', error);
-          document.getElementById('dataContainer').innerHTML = 'Error refreshing data';
+          document.getElementById('dataContainer').innerHTML = 'Error refreshing data: ' + error;
         });
     }
     
-    // Auto-refresh every 5 seconds
-    setInterval(refreshData, 5000);
+    // Auto-refresh every 2 seconds
+    setInterval(refreshData, 2000);
     
     // Initial refresh
     refreshData();

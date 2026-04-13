@@ -2,6 +2,8 @@
 #define SENSOR_H
 
 #include <Arduino.h>
+#include <ESP8266HTTPClient.h>
+#include "config.h"
 
 class Sensor {
 private:

@@ -1,4 +1,5 @@
 #include "sensor.h"
+#include "config.h"
 
 // Inicializa a variável estática
 Sensor* Sensor::sensorInstance = nullptr;
@@ -54,23 +55,47 @@ bool Sensor::PostEvent() const {
         return false;
     }
     
-    // TODO: Implementar POST HTTP
-    // Exemplo com HTTPClient:
-    // HTTPClient http;
-    // http.begin("http://seu_servidor/api/sensor");
-    // http.addHeader("Content-Type", "application/json");
-    // 
-    // String state = currentState == HIGH ? "DETECTED" : "NOT_DETECTED";
-    // String payload = "{\"sensor\":\"line_follower\",\"state\":\"" + state + 
-    //                  "\",\"timestamp\":" + String(eventTimestamp) + "}";
-    // 
-    // int httpCode = http.POST(payload);
-    // http.end();
-    // return (httpCode == HTTP_CODE_OK);
+    HTTPClient http;
+    WiFiClient client;
     
-    Serial.println("\nENVIO\n");
-
-    return true;
+    // Build URL from config
+    String serverUrl = "http://";
+    serverUrl += SERVER_IP;
+    serverUrl += "/api/sensor";
+    
+    Serial.print("[POST] Connecting to: ");
+    Serial.println(serverUrl);
+    
+    http.begin(client, serverUrl);
+    http.addHeader("Content-Type", "application/json");
+    
+    // Build JSON payload
+    String state = currentState == HIGH ? "DETECTED" : "NOT_DETECTED";
+    String payload = "{\"sensor\":\"line_follower\",\"state\":\"" + state + 
+                     "\",\"timestamp\":" + String(eventTimestamp) + "}";
+    
+    Serial.print("[POST] Sending: ");
+    Serial.println(payload);
+    
+    // Send POST request
+    int httpCode = http.POST(payload);
+    
+    // Log response
+    if (httpCode == HTTP_CODE_OK) {
+        String response = http.getString();
+        Serial.print("[POST] Response: ");
+        Serial.println(response);
+    } else if (httpCode > 0) {
+        Serial.print("[POST] Error code: ");
+        Serial.println(httpCode);
+    } else {
+        Serial.print("[POST] Failed to connect: ");
+        Serial.println(http.errorToString(httpCode));
+    }
+    
+    http.end();
+    
+    return (httpCode == HTTP_CODE_OK);
 }
 
 // ============ Utilitários ============
